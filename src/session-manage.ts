@@ -371,6 +371,7 @@ export async function newSession({
   enableReflink = false,
   disableFullSync = false,
   mergeStrategy = null,
+  rsyncPath = null,
 }): Promise<number> {
   ensureSessionDb(sessionDb);
 
@@ -427,6 +428,7 @@ export async function newSession({
         enable_reflink: !!enableReflink,
         disable_full_sync: !!disableFullSync,
         merge_strategy: normalizedMergeStrategy,
+        rsync_path: rsyncPath,
       },
       parseLabelPairs(label || []),
     );
@@ -501,6 +503,7 @@ export interface SessionEditOptions {
   disableHotSync?: boolean;
   disableFullSync?: boolean;
   mergeStrategy?: string | null;
+  rsyncPath?: string | null;
 }
 
 export async function editSession(options: SessionEditOptions) {
@@ -521,6 +524,7 @@ export async function editSession(options: SessionEditOptions) {
     disableHotSync,
     disableFullSync,
     mergeStrategy,
+    rsyncPath,
   } = options;
 
   ensureSessionDb(sessionDb);
@@ -609,6 +613,16 @@ export async function editSession(options: SessionEditOptions) {
     if ((row.merge_strategy ?? null) !== normalized) {
       updates.merge_strategy = normalized;
       changes.push(`merge-strategy=${normalized ?? "-"}`);
+      needRestart = true;
+    }
+  }
+
+  if (rsyncPath !== undefined) {
+    const next = rsyncPath === null ? null : String(rsyncPath).trim() || null;
+    const current = (row as any).rsync_path ?? null;
+    if (next !== current) {
+      updates.rsync_path = next;
+      changes.push(`rsync-path=${next ?? "-"}`);
       needRestart = true;
     }
   }

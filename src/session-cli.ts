@@ -163,6 +163,10 @@ export function registerSessionCommands(program: Command) {
           .choices(listSupportedHashes())
           .default(defaultHashAlg()),
       )
+      .option(
+        "--rsync-path <path>",
+        "override rsync binary/path for this session (passed through to scheduler)",
+      )
       .addOption(
         new Option("--compress <algorithm>", "rsync compression algorithm")
           .choices(["auto", "zstd", "lz4", "zlib", "zlibx", "none"])
@@ -597,6 +601,13 @@ export function registerSessionCommands(program: Command) {
       .option("--reset", "reset session state after applying changes", false)
       .addOption(
         new Option(
+          "--rsync-path <path>",
+          "set rsync binary/path used by this session",
+        ).conflicts("clearRsyncPath"),
+      )
+      .option("--clear-rsync-path", "remove rsync-path override", false)
+      .addOption(
+        new Option(
           "--disable-hot-sync",
           "disable realtime hot-sync cycles",
         ).conflicts("enableHotSync"),
@@ -655,6 +666,12 @@ export function registerSessionCommands(program: Command) {
             : opts.mergeStrategy !== undefined
               ? opts.mergeStrategy
               : undefined;
+        const rsyncPathUpdate =
+          opts.clearRsyncPath === true
+            ? null
+            : opts.rsyncPath !== undefined
+              ? String(opts.rsyncPath)
+              : undefined;
         try {
           const result = await editSession({
             sessionDb,
@@ -673,6 +690,7 @@ export function registerSessionCommands(program: Command) {
             disableHotSync: disableHotSyncUpdate,
             disableFullSync: disableFullSyncUpdate,
             mergeStrategy: mergeStrategyUpdate,
+            rsyncPath: rsyncPathUpdate,
           });
 
           const updatedRow = loadSessionById(sessionDb, row.id) ?? row;

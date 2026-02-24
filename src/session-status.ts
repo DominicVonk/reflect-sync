@@ -187,6 +187,7 @@ function tableOutput(
     if (sess.prefer) add("prefer", sess.prefer);
     if (sess.hash_alg) add("hash", sess.hash_alg);
     if (sess.compress) add("compress", sess.compress);
+    if (sess.rsync_path) add("rsync path", sess.rsync_path);
     const ignoreRules = deserializeIgnoreRules(sess.ignore_rules);
     if (ignoreRules.length) {
       add("ignore rules", ignoreRules.join(", "));
@@ -303,6 +304,7 @@ export function registerSessionStatus(sessionCmd: Command) {
                 prefer: sess.prefer ?? null,
                 createdAt: sess.created_at ?? null,
                 ignoreRules,
+                rsyncPath: (sess as AnyRow).rsync_path ?? null,
               },
               sync: {
                 lastCleanAt: sess.last_clean_sync_at ?? null,

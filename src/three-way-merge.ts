@@ -63,6 +63,7 @@ export type ExecuteThreeWayMergeOptions = ThreeWayMergeOptions & {
   alphaPort?: number;
   betaHost?: string;
   betaPort?: number;
+  rsyncPath?: string;
   dryRun?: boolean | string;
   verbose?: boolean | string;
   logLevel?: LogLevel;
@@ -322,6 +323,7 @@ export async function executeThreeWayMerge(
   const rsyncBase = {
     dryRun: opts.dryRun,
     verbose: opts.verbose,
+    rsyncPath: opts.rsyncPath,
     logger,
     logLevel: opts.logLevel,
     sshPort,
@@ -646,6 +648,7 @@ function categorizeOperations(plan: ThreeWayMergeResult): OperationBuckets {
 type RsyncBaseOptions = {
   dryRun?: boolean | string;
   verbose?: boolean | string;
+  rsyncPath?: string;
   logger?: Logger;
   logLevel?: LogLevel;
   sshPort?: number;

@@ -128,6 +128,7 @@ export type SchedulerOptions = {
   mergeStrategy?: string | null;
 
   compress?: string;
+  rsyncPath?: string;
   ignoreRules: string[];
 
   sessionDb?: string;
@@ -231,6 +232,10 @@ export function configureSchedulerCommand(
         "auto",
       )
       .option(
+        "--rsync-path <path>",
+        "override rsync binary/path (passed to rsync --rsync-path)",
+      )
+      .option(
         "--session-id <id>",
         "optional session id to enable heartbeats, report state, etc",
       )
@@ -278,6 +283,7 @@ export function cliOptsToSchedulerOptions(opts): SchedulerOptions {
     disableHotSync,
     disableFullSync: !!opts.disableFullSync,
     compress: opts.compress,
+    rsyncPath: opts.rsyncPath ? String(opts.rsyncPath).trim() || undefined : undefined,
     ignoreRules: normalizeIgnorePatterns(opts.ignore ?? []),
     sessionId: opts.sessionId != null ? Number(opts.sessionId) : undefined,
     sessionDb: opts.sessionDb,
@@ -386,6 +392,7 @@ async function runScheduler0({
   sessionId,
   logger,
   mergeStrategy = null,
+  rsyncPath,
 }: SchedulerOptions): Promise<void> {
   if (!alphaRoot || !betaRoot)
     throw new Error("Need --alpha-root and --beta-root");
@@ -2266,6 +2273,7 @@ async function runScheduler0({
         alphaPort,
         betaHost,
         betaPort,
+        rsyncPath,
         dryRun,
         compress,
         logger: mergeLogger,
@@ -2678,6 +2686,7 @@ async function runScheduler0({
     disableFullSync,
     mergeStrategy,
     compress,
+    rsyncPath,
     hash,
   });
 

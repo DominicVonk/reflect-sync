@@ -46,6 +46,10 @@ export function spawnSchedulerForSession(
     row.compress ?? "auto",
   ];
 
+  if ((row as any).rsync_path) {
+    args.push("--rsync-path", String((row as any).rsync_path));
+  }
+
   const ignorePatterns = deserializeIgnoreRules(row.ignore_rules ?? null);
   for (const pattern of ignorePatterns) {
     args.push("--ignore", pattern);

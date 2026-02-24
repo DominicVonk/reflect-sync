@@ -91,6 +91,7 @@ type RsyncRunOptions = RsyncLogOptions & {
   tempDir?: string;
   direction?: "alpha->beta" | "beta->alpha" | "alpha->alpha" | "beta->beta";
   captureTransfers?: TransferCaptureSpec | false;
+  rsyncPath?: string;
 };
 
 export type RsyncTransferRecord = {
@@ -198,6 +199,7 @@ export async function rsyncCopyDirsChunked(
     logger?: Logger;
     logLevel?: LogLevel;
     sshPort?: number;
+    rsyncPath?: string;
     tempDir?: string;
     progressScope?: string;
     progressMeta?: Record<string, unknown>;
@@ -354,6 +356,7 @@ export async function rsyncCopyChunked(
     logger?: Logger;
     logLevel?: LogLevel;
     sshPort?: number;
+    rsyncPath?: string;
     tempDir?: string;
     progressScope?: string;
     progressMeta?: Record<string, unknown>;
@@ -395,6 +398,7 @@ export async function rsyncCopyChunked(
         direction: opts.direction,
         dryRun: opts.dryRun,
         verbose: opts.verbose,
+        rsyncPath: opts.rsyncPath,
         logger,
         logLevel: opts.logLevel,
         sshPort: opts.sshPort,
@@ -445,6 +449,7 @@ export async function rsyncCopyChunked(
         dryRun: opts.dryRun,
         verbose: opts.verbose,
         compress: opts.compress,
+        rsyncPath: opts.rsyncPath,
         logger,
         logLevel: opts.logLevel,
         sshPort: opts.sshPort,
@@ -540,7 +545,15 @@ function numericIdsFlag(): string[] {
 }
 
 export function rsyncArgsBase(opts: RsyncRunOptions, from: string, to: string) {
-  const a = ["-a", "-I", "--relative", ...numericIdsFlag()];
+  const a = [
+    "-a",
+    "-I",
+    "--relative",
+    ...numericIdsFlag(),
+  ];
+  if (opts.rsyncPath) {
+    a.push(`--rsync-path=${opts.rsyncPath}`);
+  }
   if (opts.dryRun) a.unshift("-n");
   if (isLocal(from) && isLocal(to)) {
     // don't use the rsync delta algorithm
@@ -564,6 +577,9 @@ export function rsyncArgsDirs(opts: RsyncRunOptions) {
     "--devices",
     ...numericIdsFlag(),
   ];
+  if (opts.rsyncPath) {
+    a.push(`--rsync-path=${opts.rsyncPath}`);
+  }
   if (opts.dryRun) a.unshift("-n");
   if (!isDebugEnabled(opts)) a.push("--quiet");
   return a;
@@ -573,6 +589,9 @@ export function rsyncArgsDirs(opts: RsyncRunOptions) {
 export function rsyncArgsFixMeta(opts: RsyncRunOptions) {
   // -a includes -pgo (perms, owner, group); --no-times prevents touching mtimes
   const a = ["-a", "--no-times", "--relative", "--from0", ...numericIdsFlag()];
+  if (opts.rsyncPath) {
+    a.push(`--rsync-path=${opts.rsyncPath}`);
+  }
   if (opts.dryRun) a.unshift("-n");
   if (!isDebugEnabled(opts)) a.push("--quiet");
   return a;
@@ -586,6 +605,9 @@ export function rsyncArgsFixMetaDirs(opts: RsyncRunOptions) {
     "--from0",
     ...numericIdsFlag(),
   ];
+  if (opts.rsyncPath) {
+    a.push(`--rsync-path=${opts.rsyncPath}`);
+  }
   if (opts.dryRun) a.unshift("-n");
   if (!isDebugEnabled(opts)) a.push("--quiet");
   return a;
@@ -1002,6 +1024,7 @@ async function rsyncCopy(
     progressMeta?: Record<string, unknown>;
     direction?;
     captureTransfers?: TransferCaptureSpec;
+    rsyncPath?: string;
   } = {},
 ): Promise<{
   ok: boolean;
@@ -1253,3 +1276,4 @@ function logFiles(listFile: string) {
     return `${err}`;
   }
 }
+
